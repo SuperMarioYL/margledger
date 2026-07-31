@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="margledger-fixture" tests="55" failures="0" errors="0" skipped="0">
+  <testsuite name="tests.test_app" tests="55" failures="0" errors="0" skipped="0" time="3.20">
+    <testcase classname="tests.test_app" name="test_alpha" time="0.05"/>
+    <testcase classname="tests.test_app" name="test_beta" time="0.04"/>
+    <testcase classname="tests.test_app" name="test_gamma" time="0.06"/>
+    <testcase classname="tests.test_app" name="test_delta_placeholder" time="0.03"/>
+    <testcase classname="tests.test_app" name="test_representative_55" time="0.05"/>
+  </testsuite>
+</testsuites>

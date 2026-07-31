@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 360" width="880" height="360"
+     font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif"
+     role="img" aria-label="MargLedger architecture: transcript -> ledger -> stop/report, with the test-suite oracle feeding marginal value">
+  <defs>
+    <marker id="ah-l" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#B9B9C2"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="880" height="360" fill="#F5F5F7"/>
+
+  <!-- static connectors -->
+  <g stroke="#C9C9D0" stroke-width="1.5" fill="none">
+    <line x1="440" y1="96"  x2="440" y2="138" marker-end="url(#ah-l)"/>
+    <line x1="210" y1="180" x2="310" y2="180" marker-end="url(#ah-l)"/>
+    <line x1="530" y1="180" x2="630" y2="180" marker-end="url(#ah-l)"/>
+  </g>
+
+  <!-- marching-dash data flow (infinite, direction = data direction) -->
+  <g stroke-width="1.5" fill="none" stroke-linecap="round">
+    <line x1="440" y1="96"  x2="440" y2="134" stroke="#5E5CE6" stroke-opacity="0.5" stroke-dasharray="6 10">
+      <animate attributeName="stroke-dashoffset" from="32" to="0" dur="1.6s" repeatCount="indefinite"/>
+    </line>
+    <line x1="210" y1="180" x2="306" y2="180" stroke="#0071E3" stroke-opacity="0.5" stroke-dasharray="6 10">
+      <animate attributeName="stroke-dashoffset" from="32" to="0" dur="1.6s" repeatCount="indefinite"/>
+    </line>
+    <line x1="530" y1="180" x2="626" y2="180" stroke="#5E5CE6" stroke-opacity="0.5" stroke-dasharray="6 10">
+      <animate attributeName="stroke-dashoffset" from="32" to="0" dur="1.6s" begin="-0.8s" repeatCount="indefinite"/>
+    </line>
+  </g>
+
+  <!-- data packets along connectors -->
+  <g>
+    <circle r="3" fill="#5E5CE6">
+      <animateMotion path="M440,96 L440,134" dur="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3" fill="#0071E3">
+      <animateMotion path="M210,180 L306,180" dur="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3" fill="#5E5CE6">
+      <animateMotion path="M530,180 L626,180" dur="2.4s" begin="-1.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" begin="-1.2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- nodes (breathing fill-opacity, staggered) -->
+  <g>
+    <rect x="355" y="30" width="170" height="66" rx="14" fill="#5E5CE6" fill-opacity="0.10" stroke="#5E5CE6" stroke-width="1.5">
+      <animate attributeName="fill-opacity" values="0.10;0.18;0.10" keyTimes="0;0.5;1" dur="3.2s"
+               calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+    </rect>
+    <text x="440" y="58" text-anchor="middle" font-size="14" font-weight="600" fill="#4B3FC4">Oracle</text>
+    <text x="440" y="78" text-anchor="middle" font-size="11" font-weight="400" fill="#6E6E73">test-suite Δ</text>
+
+    <rect x="40" y="140" width="170" height="80" rx="15" fill="#0071E3" fill-opacity="0.10" stroke="#0071E3" stroke-width="1.5">
+      <animate attributeName="fill-opacity" values="0.10;0.18;0.10" keyTimes="0;0.5;1" dur="3.2s" begin="-0.8s"
+               calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+    </rect>
+    <text x="125" y="174" text-anchor="middle" font-size="15" font-weight="600" fill="#0A4F9E">Transcript</text>
+    <text x="125" y="193" text-anchor="middle" font-size="11" font-weight="400" fill="#6E6E73">sources/ · JSONL</text>
+
+    <rect x="355" y="140" width="170" height="80" rx="15" fill="#5E5CE6" fill-opacity="0.10" stroke="#5E5CE6" stroke-width="1.5">
+      <animate attributeName="fill-opacity" values="0.10;0.18;0.10" keyTimes="0;0.5;1" dur="3.2s" begin="-1.6s"
+               calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+    </rect>
+    <text x="440" y="174" text-anchor="middle" font-size="15" font-weight="600" fill="#4B3FC4">Ledger</text>
+    <text x="440" y="193" text-anchor="middle" font-size="11" font-weight="400" fill="#6E6E73">marginal value / cost</text>
+
+    <rect x="670" y="140" width="170" height="80" rx="15" fill="#10A37F" fill-opacity="0.10" stroke="#10A37F" stroke-width="1.5">
+      <animate attributeName="fill-opacity" values="0.10;0.18;0.10" keyTimes="0;0.5;1" dur="3.2s" begin="-2.4s"
+               calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+    </rect>
+    <text x="755" y="174" text-anchor="middle" font-size="15" font-weight="600" fill="#0B6B53">Stop + Report</text>
+    <text x="755" y="193" text-anchor="middle" font-size="11" font-weight="400" fill="#6E6E73">→ cli</text>
+  </g>
+</svg>
