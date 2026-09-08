@@ -1,180 +1,142 @@
-<div align="right"><sub>**English**&nbsp;&nbsp;⇄&nbsp;&nbsp;<a href="./README.md">简体中文</a></sub></div>
+[简体中文](./README.md) · [Website](https://margledger.lei6393.com) · [GitHub](https://github.com/SuperMarioYL/margledger)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./assets/hero-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="./assets/hero-light.svg">
-  <img src="./assets/hero-light.svg" width="880" alt="MargLedger hero">
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="./assets/presentation/hero-mobile-dark.svg">
+  <source media="(max-width: 600px)" srcset="./assets/presentation/hero-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/presentation/hero-dark.svg">
+  <img src="./assets/presentation/hero-light.svg" width="960" alt="Hero diagram">
 </picture>
 
-<p align="center"><sub>Attribrute marginal value to each agent-loop iteration and recommend stopping at diminishing returns — halt at the value knee, not the budget wall.</sub></p>
+# margledger
 
-<p align="center">
-  <a href="./LICENSE"><img src="https://img.shields.io/github/license/SuperMarioYL/margledger?color=0071E3" alt="MIT"></a>
-  <a href="https://github.com/SuperMarioYL/margledger/releases"><img src="https://img.shields.io/github/v/release/SuperMarioYL/margledger?color=5E5CE6" alt="release"></a>
-  <a href="https://github.com/SuperMarioYL/margledger/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/SuperMarioYL/margledger/ci.yml?branch=main&label=ci&color=10A37F" alt="CI"></a>
-  <img src="https://img.shields.io/badge/python-3.12%2B-5E5CE6" alt="python">
-  <img src="https://img.shields.io/badge/Agent-stop_at_value-5E5CE6" alt="Agent">
-  <img src="https://img.shields.io/badge/Loop--Engineering-value_ledger-10A37F" alt="Loop-Engineering">
-</p>
+**See when recorded test progress levels off.**
 
-**In one breath: you run an agentic coding loop, the only termination condition is a hard token-budget cutoff — you burn to the wall and only learn in the post-mortem that the back half added almost no net passing tests. MargLedger turns "was this iteration worth it?" into a grounded algorithmic output and stops the loop where returns flatten.**
+MargLedger pairs recorded iteration costs with test-pass deltas and produces a post-hoc stop recommendation from an explicit flat-progress rule.
 
-<h2><img src="https://api.iconify.design/tabler:topology-star-3.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> Architecture</h2>
+## Why use it
+
+A fixed budget says how much a loop may spend, but it does not show whether observed test progress continues. A ledger makes each iteration’s recorded gain and cost inspectable.
+
+- **Pair progress and cost** — Each row keeps test delta and token cost together.
+- **Explicit stop rule** — Epsilon and consecutive-iteration count are inspectable.
+- **Retain source qualifications** — Sparse or unverified fields stay labeled.
+
+## Architecture
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./assets/atlas-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="./assets/atlas-light.svg">
-  <img src="./assets/atlas-light.svg" width="880" alt="MargLedger architecture: transcript -> ledger -> stop/report, with the test-suite oracle feeding marginal value">
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="./assets/presentation/architecture-mobile-dark.svg">
+  <source media="(max-width: 600px)" srcset="./assets/presentation/architecture-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/presentation/architecture-dark.svg">
+  <img src="./assets/presentation/architecture-light.svg" width="960" alt="Architecture diagram">
 </picture>
 
-Data flow: a transcript is normalized by `sources/` into per-iteration records → `ledger.py` attributes marginal value from the test-suite delta → `stop.py` detects the diminishing-returns knee and emits the recommendation, while `report.py` exports Markdown. Value comes from a machine-checkable oracle (the test suite), not a black-box score — this is the precondition that only holds for coding loops where a real ground truth exists.
+Source adapters produce RawIteration records. build_ledger computes passing-test deltas and cumulative token cost; an optional final JUnit snapshot reconciles the last value. recommend searches for K consecutive marginal values at or below epsilon and reports the start of that retrospective run.
 
-## Table of contents
+| Component | Responsibility |
+| --- | --- |
+| `Transcript adapter` | margledger/sources |
+| `Test oracle` | margledger/oracle.py |
+| `Iteration ledger` | margledger/ledger.py |
+| `Stop recommendation` | margledger/stop.py |
 
-- [Why this exists](#why-this-exists)
-- [Install](#install)
-- [Quickstart](#quickstart)
-- [Usage](#usage)
-- [Demo](#demo)
-- [Configuration](#configuration)
-- [Commercial](#commercial)
-- [Roadmap](#roadmap)
-- [License](#license)
+## Install and quickstart
 
-<h2><img src="https://api.iconify.design/tabler/target.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> Why this exists</h2>
-
-Agentic coding loops are missing a flow primitive: a marginal-value ledger computed per iteration. Loop engineering — the discipline that **Addy Osmani** and **Boris Cherny**'s patterns inspired and that [`cobusgreyling/loop-engineering`](https://github.com/cobusgreyling/loop-engineering) shipped as cost tooling (`loop-cost`) in 2026 — already does the cost accounting. But it is cost-only: it cannot see when *value* stops accruing. MargLedger is the value-ledger complement to that lineage — it attributes each iteration's test-suite delta against its marginal token/time cost, surfaces a value/cost curve, and recommends a stop. Stopping moves from gut feel to an auditable, algorithmic verdict.
-
-<h2><img src="https://api.iconify.design/tabler:rocket.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> Install</h2>
+Build with the version declared in the repository manifest. Run the example from the repository root.
 
 ```bash
-uv tool install margledger      # or pipx install margledger
+git clone https://github.com/SuperMarioYL/margledger.git
+cd margledger
+uv venv .venv
+uv pip install --python .venv/bin/python -e .
+source .venv/bin/activate
 ```
 
-Dev install:
+Four synthetic iterations declare pass counts 1, 3, 3, 3 and a cost of 1100 tokens each. The example builds the ledger and applies K=2.
 
 ```bash
-git clone https://github.com/SuperMarioYL/margledger
-cd margledger && pip install -e ".[dev]"
+.venv/bin/python examples/presentation-demo.py
 ```
 
-<h2><img src="https://api.iconify.design/tabler:terminal-2.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> Quickstart</h2>
+## Recorded demo
+
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="./assets/presentation/process-mobile-dark.svg">
+  <source media="(max-width: 600px)" srcset="./assets/presentation/process-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/presentation/process-dark.svg">
+  <img src="./assets/presentation/process-light.svg" width="960" alt="Process diagram">
+</picture>
+
+The retrospective rule identifies the flat run beginning at iteration 3; no running agent is interrupted.
+
+```text
+{
+  "marginal_values": [
+    1.0,
+    2.0,
+    0.0,
+    0.0
+  ],
+  "cumulative_tokens": 4400,
+  "recommendation": {
+    "stop": true,
+    "knee_iter": 3,
+    "stop_iter": 3,
+    "reason": "marginal_value <= 0 for 2 consecutive iters from iter 3",
+    "tokens_saved": 1100,
+    "hard_budget_iters": null,
+    "consecutive_flat": 2,
+    "epsilon": 0,
+    "k": 2
+  }
+}
+```
+
+The complete command and output are recorded in [docs/demo-results.json](./docs/demo-results.json). Inputs and reproduction code are included in the repository.
+
+![Existing terminal recording](./assets/demo.gif)
+
+The existing recording is retained for context; the text example above documents the reproducible scenario.
+
+## Usage
+
+The CLI exposes the following operations. Commands after the example use your own paths or identifiers.
 
 ```bash
-# 1. parse a Claude Code transcript + JUnit oracle -> ledger.json
-margledger trace ~/.claude/projects/my-proj --tests junit.xml -o ledger.json
-
-# 2. value/cost curve + stop recommendation
-margledger stop ledger.json --hard-budget 10
-```
-
-<details><summary>sample output</summary>
-
-```
-STOP at iter 4 — marginal_value <= 0.0 for 7 consecutive iters from iter 4;
-~50,000 tokens saved vs a 10-iter hard budget.
-observed: 10 iters, 104,000 tokens spent, final cumulative value 55 passing tests.
-```
-
-</details>
-
-No real transcript handy? Try the shipped synthetic fixture:
-
-```bash
-margledger trace tests/fixtures/sample_transcript.jsonl \
-  --tests tests/fixtures/sample_junit.xml -o /tmp/ledger.json
-margledger stop /tmp/ledger.json --hard-budget 10
-```
-
-<h2><img src="https://api.iconify.design/tabler:terminal-2.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> Usage</h2>
-
-The five most common workflows:
-
-```bash
-# per-iteration ledger (marginal value / marginal tokens / value-per-ktoken)
-margledger trace transcript.jsonl --tests junit.xml -o ledger.json
-
-# value/cost curve + knee + stop recommendation (the hero moment)
-margledger stop ledger.json --hard-budget 10
-
-# chart only
-margledger plot ledger.json
-
-# recommendation only (pipe --json into your pipeline)
-margledger recommend ledger.json --hard-budget 10 --json
-
-# shareable Markdown snapshot for the team
+margledger trace tests/fixtures/sample_transcript.jsonl --tests tests/fixtures/sample_junit.xml -o ledger.json
+margledger recommend ledger.json --epsilon 0 --k 2 --json
 margledger replay ledger.json --markdown -o report.md
 ```
 
-The source is auto-detected: `.jsonl` → Claude Code / generic JSONL; `.vscdb` → Cursor (best-effort, `schema_unverified`). Claude Code JSONL carries no native iteration marker, so iterations are synthesized from the assistant↔user turn sequence; `usage.input_tokens/output_tokens` and `timestamp` are the real, model-attested fields. Cursor `state.vscdb` token fields are a per-file attached-context proxy (not model tokens) and are sparse — honestly flagged `sparse`, never masquerading as the m1/m2 token math.
+## Configuration
 
-See `margledger --help` for the full command reference and [`examples/`](./examples/README.md) for more.
+--epsilon and --k control the flat-progress rule; --hard-budget is an iteration-count comparison frame. --source selects auto, claude_code, generic or cursor. Cursor-derived fields can be sparse or schema_unverified and must retain those qualifications.
 
-<h2><img src="https://api.iconify.design/tabler:photo.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> Demo</h2>
+## Integrations and responsibilities
 
-![demo](assets/demo.gif)
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="./assets/presentation/integrations-mobile-dark.svg">
+  <source media="(max-width: 600px)" srcset="./assets/presentation/integrations-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/presentation/integrations-dark.svg">
+  <img src="./assets/presentation/integrations-light.svg" width="960" alt="Integrations diagram">
+</picture>
 
-The hero moment: a loop that would have burned ~50k tokens for zero net test gain, auto-flagged at iter 4 as the diminishing-returns knee and recommended to stop. Render script: [`docs/demo.tape`](./docs/demo.tape); `.github/workflows/demo.yml` re-renders it on demand.
+The following routes are implemented in the source. Choose the input that matches your task and keep the resulting artifact with your project.
 
-<h2><img src="https://api.iconify.design/tabler:adjustments.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> Configuration</h2>
+| Route | Implemented role |
+| --- | --- |
+| JSONL transcripts | Recorded iteration inputs |
+| JUnit / pytest summaries | Test-count snapshots |
+| Ledger JSON | Costs and deltas |
+| Markdown / terminal | Post-hoc report |
 
-The stop rule is a pure function: recommend stop when `marginal_value ≤ ε` for `K` consecutive iterations (default `ε=0`, `K=2`).
+## Limits and next steps
 
-| flag | type | default | meaning |
-|---|---|---|---|
-| `--epsilon` | float | `0.0` | threshold below which an iteration adds "no value" |
-| `--k` | int | `2` | consecutive no-value iterations that trigger the stop recommendation |
-| `--hard-budget` | int | `None` | hard-budget iteration count (framing only for the "tokens saved" narrative) |
-| `--tests` | path | `None` | JUnit XML oracle (final test state, reconciles cumulative value) |
-| `--source` | str | `auto` | `auto \| claude_code \| generic \| cursor` |
-| `--output` | path | `ledger.json` | ledger output path |
+- The tool analyzes finished data and does not stop an agent automatically.
+- Passing-test count is a limited signal; changed or flaky tests can alter it without improving the software. Missing inline test snapshots currently contribute zero recorded gain.
+- The reported knee is retrospective and requires later observations. tokens_saved is a counterfactual label over recorded spend, not achieved savings.
 
-<h2><img src="https://api.iconify.design/tabler:building-store.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> Commercial</h2>
+Live stop hooks and team dashboards are future work. Better iteration attribution depends on reliable per-iteration test snapshots.
 
-v0.1 is free OSS CLI (MIT) — the wedge. The commercial read is v0.2: a **self-hostable team dashboard + live stop-webhook** — the dashboard aggregates per-team `ledger.json`, and the stop-webhook auto-halts loops at the value knee.
+## License and contributions
 
-**Who pays first:** enterprise agent teams on private/local-LLM stacks running DeepSeek-V3 / Qwen2.5-Coder / GLM-4.6 on their own GPUs — every halted loop is saved real GPU hours, so the stop decision is a direct cost lever. Sold as a team plan (≤10 seats + 1 GPU cluster), not per-token.
-
-**Price:** ¥4,800 / team-month (~$660, ≤10 seats + 1 GPU cluster), or ¥48k / year per GPU-cluster node. Grounding: one halted loop saves ~50k tokens ≈ a fraction of a GPU-hour; one team runs hundreds of loops/day.
-
-**Delivery:** self-hosted first (air-gap, data stays on-prem) — Docker image + license key, invoiced bank-transfer (enterprise CN standard); optional Stripe for global teams. Not SaaS — the buyer's hard constraint is data sovereignty.
-
-**First paid target:** 1 enterprise team trial by day 45, 1 signed license by day 90.
-
-The CLI is the deployable wedge now; the team dashboard + live webhook is its commercial read — explicitly out of scope in v0.1 by contract.
-
-### vs `cobusgreyling/loop-engineering`
-
-MargLedger extends the loop-engineering lineage (the cost-only accounting that Addy Osmani and Boris Cherny inspired) into per-iteration value attribution. Honest comparison:
-
-| axis | MargLedger | `loop-engineering` |
-|---|:---:|:---:|
-| per-iteration token/time cost | ✓ | ✓ |
-| per-iteration **value** attribution (test-suite delta) | ✓ | — |
-| value/cost curve + stop recommendation | ✓ | — |
-| named the discipline + patterns/starters audience | partial | ✓ |
-| multi-framework stop-hook protocol (planned) | partial | — |
-
-Where the neighbor wins: `loop-engineering` already owns the audience and the discipline's naming — MargLedger is the value-side complement, not a competitor. The honest risk is that the cost-only leader is one attribution algorithm from closing the gap itself.
-
-<h2><img src="https://api.iconify.design/tabler:map-2.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> Roadmap</h2>
-
-- [x] **m1 parse + oracle**: Claude Code JSONL transcript + JUnit suite → per-iteration ledger → `ledger.json`
-- [x] **m2 stop curve**: value/cost curve + diminishing-returns knee + stop recommendation + tokens-saved; terminal chart
-- [x] **m3 Cursor + demo**: best-effort Cursor `state.vscdb` adapter (`schema_unverified`) + the hero stop-moment demo
-- [ ] v0.2 self-hostable team dashboard + live stop-webhook (the commercial read of `ledger.json`)
-- [ ] secondary oracle: type-check / lint-delta / build-status (for repos without a test suite)
-- [ ] cross-framework stop-hook protocol (Cline / Aider / Claude Code)
-
-<h2><img src="https://api.iconify.design/tabler:license.svg?color=%230071E3&width=24" height="22" align="absmiddle" alt=""> License</h2>
-
-MIT — see [`LICENSE`](./LICENSE). Issues and PRs welcome at [`Issues`](https://github.com/SuperMarioYL/margledger/issues).
-
-## Share this
-
-```
-MargLedger — the agent-loop ledger that stops iterations at diminishing returns. Extends the loop-engineering lineage (Addy Osmani, Boris Cherny) from cost-only into per-iteration value attribution + a stop recommendation. https://github.com/SuperMarioYL/margledger
-```
-
-<p align="center"><sub><a href="./LICENSE">MIT</a> © 2026 SuperMarioYL</sub></p>
+See [LICENSE](./LICENSE). When reporting an issue, include a minimal input, the command, and the observed output.

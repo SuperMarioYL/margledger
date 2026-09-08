@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "margledger"
 version = "0.1.0"
-description = "Per-iteration marginal-value ledger for AI coding-agent loops: attributes test-suite delta against token/time cost and recommends when to stop."
+description = "Build per-iteration test-pass and token-cost ledgers from coding transcripts, then flag runs of flat test progress."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "SuperMarioYL" }]

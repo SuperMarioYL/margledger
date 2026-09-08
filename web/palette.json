@@ -1,0 +1,38 @@
+{
+  "mode": "auto",
+  "id": "e69956-e7e76a-f6b4ac-1ba6b4a0938c",
+  "identity": "https://github.com/supermarioyl/margledger",
+  "primary": "#e69956",
+  "secondary": "#e7e76a",
+  "highlight": "#f6b4ac",
+  "dark": {
+    "bg": "#0a090d",
+    "panel": "#131317",
+    "code": "#141113",
+    "ink": "#fdf0ee",
+    "muted": "#b2aaa8",
+    "line": "#3a291d",
+    "primary": "#e69956",
+    "secondary": "#e7e76a",
+    "highlight": "#f6b4ac",
+    "accent": "#e69956",
+    "buttonStart": "#a06b3c",
+    "buttonEnd": "#797938",
+    "buttonText": "#ffffff"
+  },
+  "light": {
+    "bg": "#fefbf9",
+    "panel": "#fefaf7",
+    "code": "#fdf8f3",
+    "ink": "#271f1c",
+    "muted": "#726b6b",
+    "line": "#f7e0cb",
+    "primary": "#9c673a",
+    "secondary": "#767636",
+    "highlight": "#906965",
+    "accent": "#9c673a",
+    "buttonStart": "#a06b3c",
+    "buttonEnd": "#797938",
+    "buttonText": "#ffffff"
+  }
+}

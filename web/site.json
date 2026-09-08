@@ -1,102 +1,215 @@
 {
-  "schema": 1,
+  "schema": 3,
   "name": "margledger",
   "github": "https://github.com/SuperMarioYL/margledger",
   "host": "margledger.lei6393.com",
-  "lang": { "primary": "zh", "toggle": true },
-  "accent": ["#10b981", "#059669", "#047857"],
+  "palette": "auto",
+  "lang": {
+    "primary": "en",
+    "toggle": true
+  },
+  "meta": {
+    "visual_style": "neon-particle",
+    "demo_source": "docs/demo-results.json"
+  },
   "hero": {
-    "eyebrow": {
-      "zh": "本地 · 无账号 · 该停就停",
-      "en": "Local · no account · stop on time"
-    },
     "headline": {
-      "zh": "跑到该停就停\n不再烧到预算见底",
-      "en": "Stop where it should stop\nnot where the budget runs dry"
+      "en": "See when recorded test progress levels off.",
+      "zh": "看清记录的测试进展何时停滞。"
     },
     "sub": {
-      "zh": "它把每一轮跑下来的测试增量对照花掉的成本，画成一条曲线，在收益开始变平时告诉你该停了——还能算出这一停省了多少。",
-      "en": "It plots each round's test gain against what it cost, marks the curve where returns flatten, and tells you to stop — and how much that stop saved."
+      "en": "MargLedger pairs recorded iteration costs with test-pass deltas and produces a post-hoc stop recommendation from an explicit flat-progress rule.",
+      "zh": "MargLedger 将记录的迭代成本与通过测试数变化配对，按明确停滞规则生成事后停止建议。"
     },
-    "command": "margledger stop ledger.json",
-    "cta": { "zh": "开始使用", "en": "Get started" },
-    "ctaGithub": { "zh": "在 GitHub 查看", "en": "View on GitHub" },
-    "scroll": { "zh": "向下查看", "en": "Scroll down" }
+    "href": "#quickstart"
   },
   "advantages": [
     {
       "title": {
-        "zh": "跑到该停就停，不烧到预算见底",
-        "en": "Stop where it should, not where the budget runs out"
+        "en": "Pair progress and cost",
+        "zh": "进展与成本配对"
       },
       "body": {
-        "zh": "每一轮跑完，MargLedger 都会告诉你这一轮值不值。一旦连续几轮没有新的测试通过，直接建议你停下来，并算出这一停省下了多少——再也不靠硬截断，事后才发现后半程白烧。",
-        "en": "After every round, MargLedger tells you whether it was worth it. The moment several rounds in a row add no new passing tests, it recommends you stop — and counts how much that stop saved. No more hard cutoffs you only learn were wasteful in the post-mortem."
-      },
-      "chips": [
-        "› 连续无收益即停",
-        "› 算出省了多少"
-      ]
+        "en": "Each row keeps test delta and token cost together.",
+        "zh": "每行同时保留测试变化与 token 成本。"
+      }
     },
     {
       "title": {
-        "zh": "一眼看清哪一轮开始不值",
-        "en": "See exactly where value stops accruing"
+        "en": "Explicit stop rule",
+        "zh": "明确停止规则"
       },
       "body": {
-        "zh": "把每一轮的测试增量对照它花掉的成本，画成一条曲线，并在收益开始变平的地方标出拐点。整条循环花了多少、换回多少，一条曲线讲清楚。",
-        "en": "It plots each round's test gain against what it cost as a single curve and marks the knee where returns start to flatten. How much the whole loop spent and what it earned back — one curve, the whole story."
-      },
-      "chips": [
-        "› 价值/成本曲线",
-        "› 收益递减拐点"
-      ]
+        "en": "Epsilon and consecutive-iteration count are inspectable.",
+        "zh": "阈值与连续轮数可检查。"
+      }
     },
     {
       "title": {
-        "zh": "价值用测试说话，不是黑盒打分",
-        "en": "Value measured by tests, not a black-box score"
+        "en": "Retain source qualifications",
+        "zh": "保留来源限定"
       },
       "body": {
-        "zh": "每一轮的“价值”就是这轮新跑过的测试增量——机器可校验的真值，不是模型自己给的分数。只有跑测试的编码循环才成立；没有测试套件的场景，我们明说不在范围，不假装能打分。",
-        "en": "Each round's “value” is the new tests it got passing — a machine-checkable ground truth, not a score the model hands itself. That only holds for coding loops that run tests; for anything without a test suite, we say outright it's out of scope, rather than pretending to score it."
-      },
-      "chips": [
-        "› 测试增量即价值",
-        "› 诚实标注边界"
-      ]
-    },
-    {
-      "title": {
-        "zh": "本地 · 无账号 · 一条命令",
-        "en": "Local, no account, one command"
-      },
-      "body": {
-        "zh": "一条 uv 命令装好，读你本机的循环记录来分析，不上云、不注册、不外发数据。中英双语 README，MIT 开源。",
-        "en": "Install with one uv command and analyze the loop records already on your machine — no cloud, no sign-up, nothing sent out. Bilingual README, MIT open source."
-      },
-      "chips": [
-        "› 读本地记录",
-        "› 双语 · MIT"
-      ]
+        "en": "Sparse or unverified fields stay labeled.",
+        "zh": "稀疏或未验证字段保留标记。"
+      }
     }
   ],
-  "scene": { "kind": "mesh" },
-  "cta": {
-    "headline": {
-      "zh": "把“这一轮到底值不值”做成有据可查的结论",
-      "en": "Turn “was this round worth it?” into a grounded verdict"
+  "demo": {
+    "title": {
+      "en": "Run it on a complete example",
+      "zh": "运行完整示例"
     },
-    "sub": {
-      "zh": "开源、MIT、无付费墙。本地运行、读本地记录这一核心动作，永不设墙。",
-      "en": "Open source, MIT, no paywall. Running locally and reading your own records is never gated."
+    "note": {
+      "en": "Four synthetic iterations declare pass counts 1, 3, 3, 3 and a cost of 1100 tokens each. The example builds the ledger and applies K=2.",
+      "zh": "四轮合成输入声明通过数 1、3、3、3，每轮 1100 token。示例生成账本并应用 K=2。"
     },
-    "button": { "zh": "在 GitHub 上开始", "en": "Get started on GitHub" }
+    "source": "https://github.com/SuperMarioYL/margledger/blob/main/docs/demo-results.json",
+    "steps": [
+      {
+        "label": "Recorded run",
+        "body": "Four explicit synthetic iterations with known test-pass counts and token costs produce a post-hoc stop recommendation; no agent is stopped or measured savings achieved.",
+        "command": ".venv/bin/python examples/presentation-demo.py",
+        "output": "{\n  \"marginal_values\": [\n    1.0,\n    2.0,\n    0.0,\n    0.0\n  ],\n  \"cumulative_tokens\": 4400,\n  \"recommendation\": {\n    \"stop\": true,\n    \"knee_iter\": 3,\n    \"stop_iter\": 3,\n    \"reason\": \"marginal_value <= 0 for 2 consecutive iters from iter 3\",\n    \"tokens_saved\": 1100,\n    \"hard_budget_iters\": null,\n    \"consecutive_flat\": 2,\n    \"epsilon\": 0,\n    \"k\": 2\n  }\n}",
+        "image": "/assets/presentation/demo-0-light.svg",
+        "imageDark": "/assets/presentation/demo-0-dark.svg"
+      }
+    ]
   },
-  "footer": {
-    "tag": {
-      "zh": "在收益递减处叫停 agent 循环",
-      "en": "Stop agent loops at diminishing returns"
+  "quickstart": {
+    "title": {
+      "en": "Try it locally",
+      "zh": "本地上手"
+    },
+    "body": {
+      "en": "Four synthetic iterations declare pass counts 1, 3, 3, 3 and a cost of 1100 tokens each. The example builds the ledger and applies K=2.",
+      "zh": "四轮合成输入声明通过数 1、3、3、3，每轮 1100 token。示例生成账本并应用 K=2。"
+    },
+    "steps": [
+      {
+        "title": {
+          "en": "Install from source",
+          "zh": "从源码安装"
+        },
+        "code": "git clone https://github.com/SuperMarioYL/margledger.git\ncd margledger\nuv venv .venv\nuv pip install --python .venv/bin/python -e .\nsource .venv/bin/activate"
+      },
+      {
+        "title": {
+          "en": "Run the included example",
+          "zh": "运行随仓示例"
+        },
+        "code": ".venv/bin/python examples/presentation-demo.py"
+      }
+    ]
+  },
+  "limitations": [
+    {
+      "en": "The tool analyzes finished data and does not stop an agent automatically.",
+      "zh": "工具分析已完成数据，不会自动停止 Agent。"
+    },
+    {
+      "en": "Passing-test count is a limited signal; changed or flaky tests can alter it without improving the software. Missing inline test snapshots currently contribute zero recorded gain.",
+      "zh": "通过测试数量是有限信号；修改或不稳定测试可能改变数量而未改进软件。缺少轮内测试快照时当前实现记为零已记录增益。"
+    },
+    {
+      "en": "The reported knee is retrospective and requires later observations. tokens_saved is a counterfactual label over recorded spend, not achieved savings.",
+      "zh": "拐点是依赖后续观察的事后结果；tokens_saved 是对已记录消费的反事实标签，不是已实现节省。"
     }
+  ],
+  "scene": {
+    "kind": "neon-graph",
+    "fallback": "/assets/presentation/scene-dark.svg",
+    "fallbackLight": "/assets/presentation/scene-light.svg"
+  },
+  "story": {
+    "intro": {
+      "title": {
+        "en": "A concrete task",
+        "zh": "从实际任务出发"
+      },
+      "body": {
+        "en": "A fixed budget says how much a loop may spend, but it does not show whether observed test progress continues. A ledger makes each iteration’s recorded gain and cost inspectable.",
+        "zh": "固定预算只说明循环最多可花多少，不能展示测试进展是否继续。账本让每轮已记录增益与成本可检查。"
+      }
+    },
+    "sections": [
+      {
+        "title": {
+          "en": "Follow the operation",
+          "zh": "处理过程"
+        },
+        "body": {
+          "en": "Source adapters produce RawIteration records. build_ledger computes passing-test deltas and cumulative token cost; an optional final JUnit snapshot reconciles the last value. recommend searches for K consecutive marginal values at or below epsilon and reports the start of that retrospective run.",
+          "zh": "来源适配器生成 RawIteration；build_ledger 计算通过测试数差值和累计 token，可用最终 JUnit 快照对齐最后一轮价值。recommend 查找连续 K 轮不高于 epsilon 的边际值，报告该事后停滞段起点。"
+        },
+        "image": {
+          "light": "/assets/presentation/process-light.svg",
+          "dark": "/assets/presentation/process-dark.svg",
+          "alt": {
+            "en": "Follow the operation",
+            "zh": "处理过程"
+          }
+        }
+      },
+      {
+        "title": {
+          "en": "How MargLedger works",
+          "zh": "MargLedger 的工作方式"
+        },
+        "body": {
+          "en": "Source adapters produce RawIteration records. build_ledger computes passing-test deltas and cumulative token cost; an optional final JUnit snapshot reconciles the last value. recommend searches for K consecutive marginal values at or below epsilon and reports the start of that retrospective run.",
+          "zh": "来源适配器生成 RawIteration；build_ledger 计算通过测试数差值和累计 token，可用最终 JUnit 快照对齐最后一轮价值。recommend 查找连续 K 轮不高于 epsilon 的边际值，报告该事后停滞段起点。"
+        },
+        "image": {
+          "light": "/assets/presentation/architecture-light.svg",
+          "dark": "/assets/presentation/architecture-dark.svg",
+          "alt": {
+            "en": "How MargLedger works",
+            "zh": "MargLedger 的工作方式"
+          }
+        }
+      },
+      {
+        "title": {
+          "en": "Connect the pieces",
+          "zh": "输入与输出"
+        },
+        "body": {
+          "en": "The following routes are implemented in the source. Choose the input that matches your task and keep the resulting artifact with your project.",
+          "zh": "以下路径已有源码实现。按任务选择输入，并把生成的结果与项目一起保存。"
+        },
+        "image": {
+          "light": "/assets/presentation/integrations-light.svg",
+          "dark": "/assets/presentation/integrations-dark.svg",
+          "alt": {
+            "en": "Connect the pieces",
+            "zh": "输入与输出"
+          }
+        }
+      }
+    ],
+    "details": [
+      {
+        "title": {
+          "en": "Configuration",
+          "zh": "配置"
+        },
+        "body": {
+          "en": "--epsilon and --k control the flat-progress rule; --hard-budget is an iteration-count comparison frame. --source selects auto, claude_code, generic or cursor. Cursor-derived fields can be sparse or schema_unverified and must retain those qualifications.",
+          "zh": "--epsilon 与 --k 控制停滞规则；--hard-budget 是迭代数比较背景。--source 可选 auto、claude_code、generic 或 cursor；Cursor 字段可能标记 sparse 或 schema_unverified，需要保留这些限定。"
+        }
+      },
+      {
+        "title": {
+          "en": "Further use",
+          "zh": "进一步使用"
+        },
+        "body": {
+          "en": "The CLI exposes the following operations. Commands after the example use your own paths or identifiers.",
+          "zh": "CLI 提供以下操作。示例之外的命令需要替换成你的文件路径或标识。"
+        },
+        "code": "margledger trace tests/fixtures/sample_transcript.jsonl --tests tests/fixtures/sample_junit.xml -o ledger.json\nmargledger recommend ledger.json --epsilon 0 --k 2 --json\nmargledger replay ledger.json --markdown -o report.md"
+      }
+    ]
   }
 }

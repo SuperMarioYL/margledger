@@ -1,0 +1,78 @@
+{
+  "name": "margledger",
+  "tagline": "See when recorded test progress levels off.",
+  "architecture": {
+    "title": "How MargLedger works",
+    "nodes": [
+      {
+        "title": "Transcript adapter",
+        "detail": "margledger/sources"
+      },
+      {
+        "title": "Test oracle",
+        "detail": "margledger/oracle.py"
+      },
+      {
+        "title": "Iteration ledger",
+        "detail": "margledger/ledger.py"
+      },
+      {
+        "title": "Stop recommendation",
+        "detail": "margledger/stop.py"
+      }
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ]
+    ]
+  },
+  "process": {
+    "title": "From input to a useful result",
+    "steps": [
+      {
+        "title": "Record iterations",
+        "detail": "Explicit tests and costs"
+      },
+      {
+        "title": "Compute deltas",
+        "detail": "1, 2, 0, 0"
+      },
+      {
+        "title": "Find flat run",
+        "detail": "Two consecutive zero gains"
+      }
+    ],
+    "result": "The retrospective rule identifies the flat run beginning at iteration 3; no running agent is interrupted."
+  },
+  "integrations": {
+    "title": "Supported input and output routes",
+    "items": [
+      {
+        "title": "JSONL transcripts",
+        "detail": "Recorded iteration inputs"
+      },
+      {
+        "title": "JUnit / pytest summaries",
+        "detail": "Test-count snapshots"
+      },
+      {
+        "title": "Ledger JSON",
+        "detail": "Costs and deltas"
+      },
+      {
+        "title": "Markdown / terminal",
+        "detail": "Post-hoc report"
+      }
+    ]
+  }
+}

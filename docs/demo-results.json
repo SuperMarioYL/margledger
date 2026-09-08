@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "source_revision": "3ac55b130c5188ae2fd363f42fff4ef0858dc124",
+  "scope": "Four explicit synthetic iterations with known test-pass counts and token costs produce a post-hoc stop recommendation; no agent is stopped or measured savings achieved.",
+  "steps": [
+    {
+      "label": "Recorded run",
+      "body": "Four explicit synthetic iterations with known test-pass counts and token costs produce a post-hoc stop recommendation; no agent is stopped or measured savings achieved.",
+      "command": ".venv/bin/python examples/presentation-demo.py",
+      "output": "{\n  \"marginal_values\": [\n    1.0,\n    2.0,\n    0.0,\n    0.0\n  ],\n  \"cumulative_tokens\": 4400,\n  \"recommendation\": {\n    \"stop\": true,\n    \"knee_iter\": 3,\n    \"stop_iter\": 3,\n    \"reason\": \"marginal_value <= 0 for 2 consecutive iters from iter 3\",\n    \"tokens_saved\": 1100,\n    \"hard_budget_iters\": null,\n    \"consecutive_flat\": 2,\n    \"epsilon\": 0,\n    \"k\": 2\n  }\n}"
+    }
+  ]
+}
