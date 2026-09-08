@@ -44,24 +44,31 @@ def to_markdown(
     lines.append(
         "|---:|---:|---:|---:|---:|---:|:---:|"
     )
+    # Per-entry notes are collected and rendered BELOW the table: a note line
+    # without pipes would terminate the GFM table mid-body and orphan every
+    # following data row as plain text.
+    notes: list[str] = []
     for e in ledger:
         knee = "knee" if e.is_knee else ""
-        wall = (
-            f"{e.marginal_wall_s:.1f}s"
-            if e.marginal_wall_s is not None
-            else "—"
-        )
-        sparse = " (sparse)" if e.sparse else ""
         lines.append(
             f"| {e.iter} | {e.marginal_value:g} | {e.cumulative_value:g} | "
             f"{e.marginal_tokens:,} | {e.cumulative_tokens:,} | "
             f"{e.value_per_ktoken:g} | {knee} |"
         )
         if e.note:
-            lines.append(
-                f"  <sub>iter {e.iter}: wall {wall}{sparse} — {e.note}</sub>"
+            wall = (
+                f"{e.marginal_wall_s:.1f}s"
+                if e.marginal_wall_s is not None
+                else "—"
             )
+            sparse = " (sparse)" if e.sparse else ""
+            notes.append(f"- iter {e.iter}: wall {wall}{sparse} — {e.note}")
     lines.append("")
+    if notes:
+        lines.append("## Notes")
+        lines.append("")
+        lines.extend(notes)
+        lines.append("")
 
     if rec.stop and rec.knee_iter is not None:
         lines.append("## Why stop here")

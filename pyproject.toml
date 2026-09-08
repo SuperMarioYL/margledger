@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "margledger"
-version = "0.1.0"
+version = "0.2.0"
 description = "Build per-iteration test-pass and token-cost ledgers from coding transcripts, then flag runs of flat test progress."
 readme = "README.md"
 license = { text = "MIT" }
@@ -26,7 +26,9 @@ classifiers = [
 dependencies = [
     "typer>=0.12",
     "rich>=13.7",
-    "plotext>=5.3",
+    # plotext 6 removed the whole 5.x terminal API (clf/subplots/build/...);
+    # render_curve targets the 5.x line. Stay <6 until the port happens.
+    "plotext>=5.3,<6",
     "junitparser>=3.1",
 ]
 

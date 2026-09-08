@@ -54,7 +54,34 @@ def _detect_source(path: Path, source: str) -> str:
     name = path.name.lower()
     if name.endswith(".vscdb") or name.endswith(".sqlite") or name.endswith(".db"):
         return "cursor"
-    return "claude_code"
+    return "generic" if _jsonl_is_flat(path) else "claude_code"
+
+
+def _jsonl_is_flat(path: Path) -> bool:
+    """True when the first parseable JSON line carries no ``{type, message}``
+    envelope.
+
+    Flat transcripts (``{"role": ..., "usage": ...}`` per line) must be routed
+    to the generic adapter; enveloped ones (Claude Code) to ``claude_code``.
+    Malformed leading lines are skipped — the same "first parseable event"
+    rule :func:`generic_jsonl.parse` uses to decide delegation, so detection
+    and parsing always agree. An unreadable file falls back to ``False``
+    (the claude_code default).
+    """
+
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                return not generic_jsonl._looks_enveloped(event)
+    except (OSError, UnicodeDecodeError):
+        return False
+    return False
 
 
 def _parse_source(path: Path, source: str):

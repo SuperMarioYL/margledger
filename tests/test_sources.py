@@ -112,3 +112,45 @@ def test_generic_jsonl_handles_enveloped_format():
     raw = generic_jsonl.parse(FIX / "sample_transcript.jsonl")
     assert len(raw) == 10
     assert raw[3].test_result.passed == 55
+
+
+_FLAT_LINES = [
+    {"role": "user", "content": "go", "timestamp": "2024-05-01T00:00:00"},
+    {"role": "assistant", "content": [{"type": "text", "text": "ok"}],
+     "usage": {"input_tokens": 100, "output_tokens": 50},
+     "timestamp": "2024-05-01T00:00:05"},
+    {"role": "user", "content": "again", "timestamp": "2024-05-01T00:01:00"},
+    {"role": "assistant", "content": [{"type": "text", "text": "ok2"}],
+     "usage": {"input_tokens": 80, "output_tokens": 40},
+     "timestamp": "2024-05-01T00:01:05"},
+]
+
+
+def _write_flat(path: Path) -> None:
+    path.write_text(
+        "\n".join(json.dumps(x) for x in _FLAT_LINES) + "\n", encoding="utf-8"
+    )
+
+
+def test_generic_jsonl_tolerates_truncated_final_line(tmp_path):
+    """A partially-written final line (live transcript) must not crash parse."""
+    p = tmp_path / "flat.jsonl"
+    _write_flat(p)
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write('{"role": "assistant", "content": [{"type": "text", "tex')
+    raw = generic_jsonl.parse(p)
+    # The 4 good lines survive; the truncated line is skipped.
+    assert len(raw) == 2
+    assert raw[0].marginal_tokens == 150
+    assert raw[1].marginal_tokens == 120
+
+
+def test_generic_jsonl_leaves_no_scratch_file_next_to_source(tmp_path):
+    """Normalization scratch must never land in the transcript's directory."""
+    p = tmp_path / "flat.jsonl"
+    _write_flat(p)
+    before = {x.name for x in tmp_path.iterdir()}
+    raw = generic_jsonl.parse(p)
+    after = {x.name for x in tmp_path.iterdir()}
+    assert len(raw) == 2
+    assert before == after == {"flat.jsonl"}
