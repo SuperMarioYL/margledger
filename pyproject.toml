@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "margledger"
-version = "0.2.0"
+version = "0.3.0"
 description = "Build per-iteration test-pass and token-cost ledgers from coding transcripts, then flag runs of flat test progress."
 readme = "README.md"
 license = { text = "MIT" }

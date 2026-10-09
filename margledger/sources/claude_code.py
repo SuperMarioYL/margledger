@@ -15,16 +15,19 @@ reasoning list (``[]``), not an iteration counter. So iterations are
                 (including all tool_use / tool_result sub-cycles) up to the
                 next top-level user prompt.
 
-Only ``usage.input_tokens`` / ``usage.output_tokens`` and ``timestamp`` are
-real, model-attested fields — those drive the cost axis. The test-suite delta
-is recovered from inline ``pytest`` summary lines embedded in tool results
-(the machine-checkable oracle, grounded in the transcript itself).
+Only ``usage.input_tokens`` / ``usage.output_tokens`` (plus the cache token
+fields) and ``timestamp`` are real, model-attested fields — those drive the
+cost axis. Note the real format carries ``timestamp`` at the TOP level of
+each event, not inside ``message`` (both are read; event-level wins). The
+test-suite delta is recovered from inline ``pytest`` summary lines embedded
+in tool results (the machine-checkable oracle, grounded in the transcript
+itself).
 """
 
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -43,7 +46,17 @@ def _is_tool_result_message(message: dict) -> bool:
     return False
 
 
-def _is_top_level_prompt(message: dict) -> bool:
+def _is_meta_user(event: dict, message: dict) -> bool:
+    """True for Claude Code's injected meta caveats (``isMeta`` user events).
+
+    These are session bookkeeping (e.g. skill-directory caveats), not loop
+    turns: they must neither start a new iteration nor join one.
+    """
+
+    return bool(event.get("isMeta") or message.get("isMeta"))
+
+
+def _is_top_level_prompt(event: dict, message: dict) -> bool:
     """A user message that starts a new iteration (not a tool_result echo)."""
 
     role = message.get("role") or message.get("type")
@@ -85,19 +98,30 @@ def _extract_text(content: Any) -> str:
 
 
 def _parse_ts(value: Any) -> datetime | None:
+    """Parse a transcript timestamp, always returning a UTC-aware datetime.
+
+    Real events carry ``...Z`` (naive after stripping the suffix) while
+    transcripts from other loops may carry ``+08:00``-style offsets; mixing
+    the two previously crashed the wall-clock subtraction with a
+    naive-vs-aware TypeError. Naive strings are interpreted as UTC.
+    """
+
     if not value or not isinstance(value, str):
         return None
     cleaned = value.rstrip("Z")
     for fmt in ("%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S"):
         try:
-            return datetime.strptime(cleaned, fmt)
+            return datetime.strptime(cleaned, fmt).replace(tzinfo=timezone.utc)
         except ValueError:
             continue
     # ISO 8601 with offset — let fromisoformat handle it.
     try:
-        return datetime.fromisoformat(cleaned)
+        parsed = datetime.fromisoformat(cleaned)
     except ValueError:
         return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
 
 
 def _usage_tokens(message: dict) -> tuple[int, int]:
@@ -106,7 +130,12 @@ def _usage_tokens(message: dict) -> tuple[int, int]:
         return (0, 0)
     inp = usage.get("input_tokens") or usage.get("prompt_tokens") or 0
     out = usage.get("output_tokens") or usage.get("completion_tokens") or 0
-    return (_to_int(inp), _to_int(out))
+    # Cache tokens are real, billed, model-attested input cost; the fields
+    # are absent or null outside Claude Code, which _to_int coerces to 0.
+    cache = (usage.get("cache_creation_input_tokens") or 0) + (
+        usage.get("cache_read_input_tokens") or 0
+    )
+    return (_to_int(inp) + _to_int(cache), _to_int(out))
 
 
 def _to_int(value: Any) -> int:
@@ -138,17 +167,24 @@ def parse(path: str | Path) -> list[RawIteration]:
                 continue
 
     # Group events into iterations: a new iteration starts at a top-level user
-    # prompt; everything up to the next top-level prompt belongs to it.
+    # prompt; everything up to the next top-level prompt belongs to it. Events
+    # before the first prompt (queue-operation, attachment, custom-title, ...)
+    # are session preamble, not loop iterations, and are skipped; isMeta user
+    # events are injected caveats and are skipped as well.
     iterations: list[list[dict]] = []
-    current: list[dict] = []
+    current: list[dict] | None = None
     for event in events:
         message = event.get("message") if isinstance(event, dict) else None
         etype = event.get("type") if isinstance(event, dict) else None
-        if message and etype == "user" and _is_top_level_prompt(message):
+        is_user_event = bool(message) and etype == "user"
+        if is_user_event and _is_meta_user(event, message):
+            continue
+        if is_user_event and _is_top_level_prompt(event, message):
             if current:
                 iterations.append(current)
             current = [event]
-        else:
+            continue
+        if current is not None:
             current.append(event)
     if current:
         iterations.append(current)
@@ -163,13 +199,17 @@ def parse(path: str | Path) -> list[RawIteration]:
         last_test: TestResult | None = None
         for event in group:
             message = event.get("message") if isinstance(event, dict) else None
-            if not isinstance(message, dict):
-                continue
-            ts = _parse_ts(message.get("timestamp"))
+            # Real Claude Code events carry the timestamp at the top level;
+            # the documented example format nests it inside the message.
+            ts = _parse_ts(event.get("timestamp"))
+            if ts is None and isinstance(message, dict):
+                ts = _parse_ts(message.get("timestamp"))
             if ts is not None:
                 if first_ts is None:
                     first_ts = ts
                 last_ts = ts
+            if not isinstance(message, dict):
+                continue
             if message.get("role") == "assistant" or event.get("type") == "assistant":
                 inp, out = _usage_tokens(message)
                 input_tokens += inp

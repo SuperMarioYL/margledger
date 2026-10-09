@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -101,8 +102,6 @@ def _mark_knee(ledger: list[LedgerEntry], rec) -> list[LedgerEntry]:
     out: list[LedgerEntry] = []
     for e in ledger:
         if e.iter == rec.knee_iter:
-            from dataclasses import replace
-
             e = replace(e, is_knee=True)
         out.append(e)
     return out

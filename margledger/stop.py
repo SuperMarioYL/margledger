@@ -194,12 +194,7 @@ def render_curve(
         plt.vline(rec.knee_iter, color="red")
 
     plt.theme("clear")
-    try:
-        rendered = plt.build()
-    except Exception:
-        # plotext build() returns a string; guard for env quirities.
-        rendered = plt.build()
-    return rendered
+    return plt.build()
 
 
 def render_summary(rec: StopRecommendation, ledger: list[LedgerEntry]) -> str:

@@ -4,6 +4,40 @@ All notable changes to MargLedger are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-09
+
+### Fixed
+- `marginal_wall_s` was `null` for every iteration on real Claude Code
+  transcripts: the adapter read `timestamp` from inside `message`, but real
+  events carry it at the top level (a real 646-event session has 565
+  event-level timestamps and 0 message-level ones). The adapter now reads the
+  event-level timestamp first and falls back to the message-level one, so the
+  documented example format keeps working.
+- Mixing timezone styles in one transcript (`...Z` and `...+08:00`) crashed
+  `trace` with `TypeError: can't subtract offset-naive and offset-aware
+  datetimes`. All timestamps now normalize to UTC (naive means UTC).
+- `marginal_tokens` dropped cache tokens: `cache_creation_input_tokens` and
+  `cache_read_input_tokens` are real, billed usage fields (32.4% of total
+  token cost on a measured real session) and can be null. They are now
+  included in the per-iteration marginal cost.
+- Session preamble events (queue-operation, attachment, custom-title,
+  last-prompt) no longer produce a phantom zero-token iteration 1, and
+  `isMeta` user events (Claude Code's injected skill caveats) no longer split
+  an in-flight iteration in two. Iteration numbering now matches what an
+  operator reading the transcript would count.
+
+### Changed
+- Removed a dead exception path in the value/cost-curve renderer whose
+  handler re-ran the identical `plt.build()` call; curve rendering is a
+  single call again. No behavior change.
+
+### Added
+- `tests/test_version.py` pins the version single source of truth: the
+  VERSION file, `pyproject.toml`, the package `__version__`, and the
+  `--version` CLI output must stay in lockstep.
+
+[0.3.0]: https://github.com/SuperMarioYL/margledger/releases/tag/v0.3.0
+
 ## [0.2.0] - 2026-09-09
 
 ### Fixed
@@ -33,7 +67,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `web/site.json` now carries `meta.content_version` so the Pages site
   reflects the shipped release version.
 
-[0.2.0]: https://github.com/SuperMarioYL/margledger/releases/tag/v0.2.0
 [0.1.0]: https://github.com/SuperMarioYL/margledger/releases/tag/v0.1.0
 
 ## [0.1.0] - 2026-08-01
