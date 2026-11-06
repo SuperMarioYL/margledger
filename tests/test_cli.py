@@ -95,6 +95,35 @@ def test_version_flag():
     assert "margledger" in result.output
 
 
+def test_trace_rejects_unknown_source(tmp_path):
+    """--source documents auto|claude_code|generic|cursor; a typo must not be
+    silently accepted and echoed as if it named an adapter."""
+    out = tmp_path / "ledger.json"
+    result = runner.invoke(
+        app,
+        ["trace", str(FIX / "sample_transcript.jsonl"),
+         "--source", "claudecode", "--output", str(out)],
+    )
+    assert result.exit_code == 2
+    assert "invalid source" in result.output
+    assert not out.exists()
+
+
+def test_trace_reports_malformed_junit_without_a_traceback(tmp_path):
+    junit = tmp_path / "truncated.xml"
+    junit.write_text('<testsuites><testsuite tests="2"', encoding="utf-8")
+    out = tmp_path / "ledger.json"
+    result = runner.invoke(
+        app,
+        ["trace", str(FIX / "sample_transcript.jsonl"),
+         "--tests", str(junit), "--output", str(out)],
+    )
+    assert result.exit_code == 2
+    assert "cannot parse JUnit XML" in result.output
+    assert "truncated.xml" in result.output
+    assert "Traceback" not in result.output
+
+
 def test_trace_auto_detects_flat_jsonl(tmp_path):
     """Default `--source auto` must route flat JSONL to the generic adapter
     (README: `.jsonl` -> Claude Code / generic JSONL), not silently produce a

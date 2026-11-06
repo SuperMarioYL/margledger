@@ -57,6 +57,10 @@ class LedgerEntry:
     cumulative_tokens: int
     value_per_ktoken: float
     is_knee: bool = False
+    # True when a test snapshot was actually observed for this iteration.
+    # ``False`` means a ``marginal_value`` of 0 is "unknown", not a measured
+    # zero — the stop rule must not read it as evidence of flat progress.
+    value_observed: bool = True
     # Provenance passthrough for sparse / unverified sources.
     sparse: bool = False
     schema_unverified: bool = False
@@ -73,11 +77,15 @@ def build_ledger(
     iteration's cumulative passing count. When an iteration carries no
     inline test snapshot (``test_result is None``), its marginal value is 0
     and the cumulative is carried forward — this is the honest, conservative
-    read (no test run observed → no value claim).
+    read (no test run observed → no value claim), and the entry is marked
+    ``value_observed=False`` so the stop rule does not mistake it for a
+    measured flat iteration.
 
     ``final_oracle`` is an optional ``--tests`` JUnit snapshot. When provided,
     the last iteration's cumulative is reconciled to it (a real, re-runnable
-    ground truth) and any reconciliation gap is reported on that entry's note.
+    ground truth), and that iteration's marginal value and value-per-ktoken
+    are restated from the reconciliation gap so ``cumulative_value`` stays the
+    running sum of the marginal values. Any gap is reported on the entry note.
     """
 
     entries: list[LedgerEntry] = []
@@ -109,6 +117,7 @@ def build_ledger(
                 marginal_wall_s=raw.wall_s,
                 cumulative_tokens=cumulative_tokens,
                 value_per_ktoken=round(value_per_ktoken, 6),
+                value_observed=raw.test_result is not None,
                 sparse=raw.sparse,
                 schema_unverified=raw.schema_unverified,
                 note=raw.note,
@@ -120,12 +129,26 @@ def build_ledger(
         oracle_passed = final_oracle.passed
         gap = oracle_passed - last.cumulative_value
         if abs(gap) > 1e-9:
+            # The oracle moves the last cumulative; restate that iteration's
+            # marginal value from the gap so cumulative stays additive.
+            value_before_last = last.cumulative_value - last.marginal_value
+            reconciled_marginal = oracle_passed - value_before_last
+            ktoken = last.marginal_tokens / 1000.0
             note = (last.note + " | " if last.note else "") + (
                 f"final oracle reconciled cumulative_value "
                 f"{last.cumulative_value:.0f} -> {oracle_passed} "
                 f"(delta {gap:+.0f})"
             )
-            entries[-1] = _replace(last, cumulative_value=float(oracle_passed), note=note)
+            entries[-1] = _replace(
+                last,
+                marginal_value=round(reconciled_marginal, 6),
+                cumulative_value=float(oracle_passed),
+                value_per_ktoken=round(
+                    reconciled_marginal / ktoken if ktoken > 0 else 0.0, 6
+                ),
+                value_observed=True,
+                note=note,
+            )
 
     return entries
 
@@ -170,6 +193,9 @@ def from_json(path: str | Path) -> list[LedgerEntry]:
                 cumulative_tokens=int(row["cumulative_tokens"]),
                 value_per_ktoken=float(row["value_per_ktoken"]),
                 is_knee=bool(row.get("is_knee", False)),
+                # Ledgers written before the observation flag existed carry no
+                # value: treat their rows as observed (previous behavior).
+                value_observed=bool(row.get("value_observed", True)),
                 sparse=bool(row.get("sparse", False)),
                 schema_unverified=bool(row.get("schema_unverified", False)),
                 note=row.get("note"),

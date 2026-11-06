@@ -10,8 +10,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from margledger.ledger import build_ledger, from_json, to_json
-from margledger.oracle import parse_junit
+from margledger.ledger import RawIteration, build_ledger, from_json, to_json
+from margledger.oracle import TestResult, parse_junit
 from margledger.sources import claude_code
 from margledger.stop import recommend, render_curve, render_summary
 
@@ -52,6 +52,48 @@ def test_final_oracle_reconciles_without_gap():
     # Final cumulative == oracle (55); no reconciliation note expected.
     assert ledger[-1].cumulative_value == 55.0
     assert ledger[-1].note is None
+
+
+def test_final_oracle_only_ledger_stays_additive_and_does_not_fake_a_knee():
+    """A transcript with no inline snapshots plus a final JUnit oracle must not
+    report the whole run as flat value."""
+    raw = [
+        RawIteration(iter=1, input_tokens=1000, output_tokens=0, wall_s=None),
+        RawIteration(iter=2, input_tokens=1000, output_tokens=0, wall_s=None),
+        RawIteration(iter=3, input_tokens=1000, output_tokens=0, wall_s=None),
+    ]
+    ledger = build_ledger(raw, final_oracle=TestResult(total=55))
+    # Additive: every cumulative is the previous cumulative + this marginal.
+    for prev, cur in zip(ledger, ledger[1:]):
+        assert cur.cumulative_value == prev.cumulative_value + cur.marginal_value
+    assert [e.cumulative_value for e in ledger] == [0.0, 0.0, 55.0]
+    assert ledger[-1].marginal_value == 55.0
+    assert ledger[-1].value_per_ktoken == 55.0
+    assert ledger[-1].value_observed is True
+    assert ledger[0].value_observed is False
+    rec = recommend(ledger)
+    assert rec.stop is False
+    assert rec.knee_iter is None
+    assert "without a test snapshot" in rec.reason
+
+
+def test_from_json_defaults_legacy_entries_to_observed(tmp_path):
+    """Ledgers written before value_observed existed keep their old meaning."""
+    payload = {
+        "schema": "margledger/ledger/v1",
+        "entries": [
+            {"iter": 1, "marginal_value": 0.0, "cumulative_value": 0.0,
+             "marginal_tokens": 10, "marginal_wall_s": None,
+             "cumulative_tokens": 10, "value_per_ktoken": 0.0},
+            {"iter": 2, "marginal_value": 0.0, "cumulative_value": 0.0,
+             "marginal_tokens": 10, "marginal_wall_s": None,
+             "cumulative_tokens": 20, "value_per_ktoken": 0.0},
+        ],
+    }
+    out = tmp_path / "legacy.json"
+    out.write_text(json.dumps(payload), encoding="utf-8")
+    loaded = from_json(out)
+    assert all(e.value_observed is True for e in loaded)
 
 
 def test_ledger_json_round_trip(tmp_path):

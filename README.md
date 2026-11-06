@@ -66,7 +66,7 @@ source .venv/bin/activate
   <img src="./assets/presentation/process-light.svg" width="960" alt="Process diagram">
 </picture>
 
-The retrospective rule identifies the flat run beginning at iteration 3; no running agent is interrupted.
+该事后规则定位从第 3 轮开始的停滞段；不会中断正在运行的 Agent。
 
 ```text
 {

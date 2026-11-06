@@ -49,7 +49,15 @@ def _main(
     """MargLedger — stop agent loops at diminishing returns."""
 
 
+_SOURCES = ("auto", "claude_code", "generic", "cursor")
+
+
 def _detect_source(path: Path, source: str) -> str:
+    if source not in _SOURCES:
+        raise typer.BadParameter(
+            f"invalid source {source!r}; choose one of {', '.join(_SOURCES)}",
+            param_hint="'--source'",
+        )
     if source != "auto":
         return source
     name = path.name.lower()
@@ -146,7 +154,11 @@ def trace(
         )
         raise typer.Exit(code=1)
 
-    final_oracle = parse_junit(tests) if tests else None
+    try:
+        final_oracle = parse_junit(tests) if tests else None
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2)
     ledger = build_ledger(raw_iters, final_oracle=final_oracle)
     rec = recommend(ledger, epsilon=epsilon, k=k, hard_budget_iters=hard_budget)
     ledger = _mark_knee(ledger, rec)

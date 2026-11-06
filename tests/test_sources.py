@@ -87,6 +87,30 @@ def test_cursor_parse_sparse_when_no_timing(tmp_path):
     assert raw[0].schema_unverified is True
 
 
+def test_cursor_note_surfaces_the_proxy_token_count(tmp_path):
+    """The per-file-context proxy is the only token-bearing field this source
+    has; computing it and printing only the word "proxy" loses the number."""
+    db = tmp_path / "state.vscdb"
+    session = {
+        "fullBubbles": [
+            {"type": "chat", "text": "iter 1 prompt",
+             "timingInfo": {"startTime": 1700000000000, "endTime": 1700000010000},
+             "tokenCountUpUntilHere": 1234},
+            {"type": "assistant", "text": "response"},
+            {"type": "chat", "text": "iter 2 prompt"},  # no proxy count
+            {"type": "assistant", "text": "response"},
+        ]
+    }
+    _make_vscdb(db, {"composerData:abc": session})
+    raw = cursor.parse(db)
+    assert "1,234" in raw[0].note
+    assert raw[0].sparse is False
+    # The proxy is attached-context size, never model tokens.
+    assert raw[0].marginal_tokens == 0
+    assert "unavailable" in raw[1].note
+    assert raw[1].sparse is True
+
+
 def test_generic_jsonl_delegates_for_flat_format(tmp_path):
     # Flat per-line message contract, no {type, message} envelope.
     lines = [

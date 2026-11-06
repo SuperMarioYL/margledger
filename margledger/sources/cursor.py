@@ -143,6 +143,11 @@ def _bubbles_to_iterations(
         wall_s: float | None = None
         if first_ts and last_ts:
             wall_s = (last_ts - first_ts).total_seconds()
+        # Surface the proxy count itself: computing it and reporting only the
+        # word "proxy" hides the one token-bearing field this source has.
+        proxy_label = (
+            f"{proxy_tokens:,}" if proxy_tokens else "unavailable"
+        )
         raw_iters.append(
             RawIteration(
                 iter=idx,
@@ -154,8 +159,8 @@ def _bubbles_to_iterations(
                 sparse=sparse,
                 schema_unverified=SCHEMA_UNVERIFIED,
                 note=(
-                    "cursor: per-file-context token proxy (NOT model tokens); "
-                    "no test oracle available"
+                    f"cursor: per-file-context token proxy {proxy_label} "
+                    "(NOT model tokens); no test oracle available"
                 ),
             )
         )

@@ -121,7 +121,10 @@ def parse_junit(path: str | Path) -> TestResult:
 
     if JUnitXml is None:  # pragma: no cover
         raise RuntimeError("junitparser is required for the JUnit oracle")
-    xml = JUnitXml.fromfile(str(path))
+    try:
+        xml = JUnitXml.fromfile(str(path))
+    except Exception as exc:  # ElementTree/lxml raise several parser types
+        raise ValueError(f"cannot parse JUnit XML {path}: {exc}") from exc
     total = failures = errors = skipped = 0
     suites: Any
     if hasattr(xml, "testsuites") and xml.testsuites is not None:

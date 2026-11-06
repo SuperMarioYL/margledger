@@ -4,6 +4,37 @@ All notable changes to MargLedger are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-07
+
+### Fixed
+- The stop rule no longer treats an iteration with no test snapshot as a
+  measured zero. Previously every run that relied on the final `--tests` JUnit
+  snapshot (the documented path when the transcript carries no inline pytest
+  summary) reported `STOP at iter 1` with the whole run counted as waste; the
+  same happened to every Cursor ledger, which has no test oracle at all.
+  Iterations without an observed snapshot are now excluded from the
+  flat-run rule and counted in the "no knee" explanation.
+- Final-oracle reconciliation keeps the ledger additive: when the last
+  iteration's cumulative value is reconciled to the JUnit snapshot, its
+  `marginal_value` and `value_per_ktoken` are restated from the same gap, so
+  `cumulative_value` always equals the running sum of marginal values.
+- The Cursor adapter now prints the per-file-context token proxy it reads
+  from `tokenCountUpUntilHere`; the count was computed and discarded while
+  the entry note only said "proxy". `marginal_tokens` stays 0 because the
+  field is attached-context size, not model tokens.
+- `--source` rejects unknown values with a usage error instead of silently
+  falling back to the Claude Code adapter (and echoing the bogus name as the
+  source in the ledger table).
+- A malformed or truncated `--tests` JUnit file now produces a one-line error
+  naming the file and exit code 2, instead of a raw XML parser traceback.
+
+### Added
+- `tests/test_version.py` now also checks the newest CHANGELOG heading and
+  `web/site.json` `meta.content_version`, so both surfaces stay in lockstep
+  with `VERSION`.
+
+[0.4.0]: https://github.com/SuperMarioYL/margledger/releases/tag/v0.4.0
+
 ## [0.3.0] - 2026-10-09
 
 ### Fixed
@@ -66,6 +97,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - `web/site.json` now carries `meta.content_version` so the Pages site
   reflects the shipped release version.
+
+[0.2.0]: https://github.com/SuperMarioYL/margledger/releases/tag/v0.2.0
 
 [0.1.0]: https://github.com/SuperMarioYL/margledger/releases/tag/v0.1.0
 

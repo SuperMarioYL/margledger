@@ -1,9 +1,11 @@
 """Stop-recommender — a pure function over the ledger.
 
 Stop rule (mvp_plan §2): ``marginal_value ≤ ε`` for ``K`` consecutive
-iterations (default ``ε = 0``, ``K = 2``). The recommendation is post-hoc
-(v0.1 analyzes a finished transcript) and **recommends**; the operator
-decides whether to halt. The hero moment:
+iterations (default ``ε = 0``, ``K = 2``). Only iterations that carried an
+observed test snapshot participate — an iteration with no test run has an
+unknown marginal value and is excluded rather than read as a measured zero.
+The recommendation is post-hoc (v0.1 analyzes a finished transcript) and
+**recommends**; the operator decides whether to halt. The hero moment:
 
     STOP at iter 4 — marginal value 0 for 2 iters; ~50k tokens saved
     vs a 10-iter hard budget.
@@ -69,16 +71,23 @@ def recommend(
 
     knee_index = _find_knee(ledger, epsilon=epsilon, k=k)
     if knee_index is None:
-        # No diminishing run found — value is still accruing.
+        # No measured diminishing run found — value is still accruing, or
+        # there were not enough observed iterations to tell.
         max_flat = _max_consecutive_flat(ledger, epsilon=epsilon)
+        unobserved = sum(1 for e in ledger if not e.value_observed)
+        reason = (
+            f"no {k}-consecutive observed marginal_value <= {epsilon} run found "
+            f"(max observed flat run = {max_flat})"
+        )
+        if unobserved:
+            reason += (
+                f"; {unobserved} iteration(s) without a test snapshot excluded"
+            )
         return StopRecommendation(
             stop=False,
             knee_iter=None,
             stop_iter=None,
-            reason=(
-                f"no {k}-consecutive marginal_value <= {epsilon} run found; "
-                f"value still accruing (max flat run = {max_flat})"
-            ),
+            reason=reason,
             tokens_saved=0,
             hard_budget_iters=hard_budget_iters,
             consecutive_flat=max_flat,
@@ -110,13 +119,21 @@ def recommend(
 def _find_knee(
     ledger: list[LedgerEntry], *, epsilon: float, k: int
 ) -> int | None:
-    """Index of the first iteration that begins a K-long flat run."""
+    """Index of the first iteration that begins a K-long observed flat run.
+
+    Only iterations that actually carried a test snapshot count: an entry
+    with ``value_observed=False`` has an unknown marginal value, so it can
+    neither be nor interrupt a measured flat run.
+    """
 
     n = len(ledger)
     if k <= 0 or n < k:
         return None
     for i in range(n - k + 1):
-        if all(ledger[j].marginal_value <= epsilon for j in range(i, i + k)):
+        if all(
+            ledger[j].value_observed and ledger[j].marginal_value <= epsilon
+            for j in range(i, i + k)
+        ):
             return i
     return None
 
@@ -126,7 +143,7 @@ def _consecutive_flat_from(
 ) -> int:
     count = 0
     for entry in ledger[start:]:
-        if entry.marginal_value <= epsilon:
+        if entry.value_observed and entry.marginal_value <= epsilon:
             count += 1
         else:
             break
@@ -138,7 +155,7 @@ def _max_consecutive_flat(
 ) -> int:
     best = run = 0
     for entry in ledger:
-        if entry.marginal_value <= epsilon:
+        if entry.value_observed and entry.marginal_value <= epsilon:
             run += 1
             best = max(best, run)
         else:
